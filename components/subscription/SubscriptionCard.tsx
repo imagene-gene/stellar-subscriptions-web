@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useWallet } from "@/hooks/useWallet";
+import { useTokenBalance } from "@/hooks/useToken";
 import { describeInterval } from "@/lib/format";
 import { AddressLink } from "@/components/ui/AddressLink";
 import { TokenAmount } from "@/components/ui/TokenAmount";
@@ -16,6 +18,12 @@ import { SubStatusBadge } from "./SubStatusBadge";
  * card itself, so stopping a subscription is never more than one click away.
  */
 export function SubscriptionCard({ sub, onChanged }: { sub: Subscription; onChanged: () => void }) {
+  const { address } = useWallet();
+  const balance = useTokenBalance(sub.token, address);
+
+  const balanceTooLow =
+    balance.data !== null && balance.data !== undefined && balance.data < sub.amountPerPeriod;
+
   return (
     <article className="card space-y-5 p-5" aria-label={`Subscription ${sub.id}`}>
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -40,6 +48,13 @@ export function SubscriptionCard({ sub, onChanged }: { sub: Subscription; onChan
         </div>
         <SubStatusBadge status={sub.status} />
       </header>
+
+      {balanceTooLow && (
+        <div className="rounded bg-warn/10 p-3 text-sm text-warn">
+          <p className="font-medium">Insufficient balance</p>
+          <p>Your balance is too low to cover the next charge. Top up to avoid failed payments.</p>
+        </div>
+      )}
 
       <CapProgress sub={sub} />
       <NextChargeCountdown sub={sub} />

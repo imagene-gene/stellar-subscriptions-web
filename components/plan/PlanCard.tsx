@@ -1,22 +1,26 @@
 import Link from "next/link";
-import { describeInterval, maxCharges, pluralize, shortAddress } from "@/lib/format";
+import { describeInterval, maxCharges, pluralize, shortAddress, normalizeTo30Days } from "@/lib/format";
 import { TokenAmount } from "@/components/ui/TokenAmount";
 import type { Plan } from "@/types";
 import { PlanBadge } from "./PlanBadge";
+import { DeactivatePlanButton } from "./DeactivatePlanButton";
 
 export function PlanCard({ plan }: { plan: Plan }) {
   return (
-    <Link
-      href={`/plans/${plan.id}`}
-      className="card group flex flex-col gap-4 p-5 transition hover:border-brand/50"
-    >
+    <div className="card group flex flex-col gap-4 p-5 transition hover:border-brand/50">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-semibold text-fg group-hover:text-brand">{plan.name}</h3>
+        <Link href={`/plans/${plan.id}`} className="font-semibold text-fg group-hover:text-brand">
+          {plan.name}
+        </Link>
         <PlanBadge active={plan.active} />
       </div>
       <p className="text-2xl font-semibold text-fg">
         <TokenAmount token={plan.token} value={plan.amountPerPeriod} />
         <span className="ml-1 text-sm font-normal text-muted">{describeInterval(plan.intervalLedgers)}</span>
+      </p>
+      <p className="text-xs text-muted">
+        <span className="block font-medium">Estimated cost per 30 days:</span>
+        <TokenAmount token={plan.token} value={normalizeTo30Days(plan.amountPerPeriod, plan.intervalLedgers)} />
       </p>
       <dl className="mt-auto grid grid-cols-2 gap-2 text-xs text-muted">
         <div>
@@ -34,6 +38,11 @@ export function PlanCard({ plan }: { plan: Plan }) {
           <dd className="font-mono text-fg">{shortAddress(plan.merchant)}</dd>
         </div>
       </dl>
-    </Link>
+      {plan.active ? (
+        <div className="flex justify-end">
+          <DeactivatePlanButton plan={plan} />
+        </div>
+      ) : null}
+    </div>
   );
 }
